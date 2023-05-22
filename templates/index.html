@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Поиск оружия</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Поиск оружия</h1>
+    <form action="/" method="POST">
+        <label for="weapon_name">Наименование оружия:</label>
+        <input type="text" id="weapon_name" name="weapon_name">
+        <button type="submit">Найти</button>
+    </form>
+
+    {% if weapon_info %}
+        <table>
+            <tr>
+                <th>Наименование</th>
+                <td>{{ weapon_info.weapon_name }}</td>
+            </tr>
+            <tr>
+                <th>Калибр</th>
+                <td>{{ weapon_info.caliber }}</td>
+            </tr>
+            <tr>
+                <th>На вооружении</th>
+                <td>{{ weapon_info.in_service }}</td>
+            </tr>
+            <tr>
+                <th>Варианты</th>
+                <td>{{ weapon_info.variants }}</td>
+            </tr>
+            <tr>
+                <th>Страна</th>
+                <td>{{ weapon_info.country }}</td>
+            </tr>
+        </table>
+        <p><strong>Ссылка на Wikipedia:</strong> <a href="{{ weapon_info.wiki_link }}">Перейти</a></p>
+        <p><strong>Ссылка на Ruxpert:</strong> <a href="{{ weapon_info.ruxpert_link }}">Перейти</a></p>
+        <p><strong>Ссылка на Weaponland:</strong> <a href="{{ weapon_info.weaponland_link }}">Перейти</a></p>
+    {% else %}
+        {% if submitted %}
+            <p>Оружие не найдено.</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
