@@ -1,16 +1,19 @@
 from flask import Flask, render_template, request, flash
 from wtforms import Form, StringField, validators
-import mysql.connector
+import csv
 
 app = Flask(__name__)
+app.secret_key = 'my_secret_key'
 
-# Подключение к базе данных MySQL
-connection = mysql.connector.connect(
-    host="dist/weapons.ibd",
-    user="root",
-    password="0000",
-    database="weapons"
-)
+# Чтение данных из CSV-файла
+csv_file = "weapons.csv"
+weapons_data = []
+
+with open(csv_file, "r", newline="") as file:
+    reader = csv.reader(file)
+    headers = next(reader)  # Пропустить заголовки
+    for row in reader:
+        weapons_data.append(dict(zip(headers, row)))
 
 # Класс формы для ввода названия оружия
 class WeaponSearchForm(Form):
@@ -24,40 +27,31 @@ def index():
     if request.method == 'POST' and form.validate():
         weapon_name = form.weapon_name.data
 
-        cursor = connection.cursor()
-
-        query = "SELECT * FROM weapons WHERE weapon_name LIKE %s"
-        values = (f'%{weapon_name}%',)
-
-        cursor.execute(query, values)
-        result = cursor.fetchone()
-
-        cursor.fetchall()  # Строка, чтобы прочитать остаток результатов
-
-        cursor.close()
-
-        if result:
-            weapon_info = {
-                'weapon_name': result[1],
-                'caliber': result[2],
-                'in_service': result[3],
-                'variants': result[4],
-                'country': result[5],
-                'wiki_link': result[6],
-                'ruxpert_link': result[7],
-                'weaponland_link': result[8]
-            }
-            submitted = True
-        else:
-            weapon_info = None
-            flash('Оружие не найдено.', 'danger')
-            submitted = True
-    else:
         weapon_info = None
         submitted = False
 
-    return render_template('index.html', form=form, weapon_info=weapon_info, submitted=submitted)
+        for weapon in weapons_data:
+            if weapon['weapon_name'].lower().find(weapon_name.lower()) != -1:
+                weapon_info = {
+                    'weapon_name': weapon['weapon_name'],
+                    'caliber': weapon['caliber'],
+                    'in_service': weapon['in_service'],
+                    'variants': weapon['variants'],
+                    'country': weapon['country'],
+                    'wiki_link': weapon['wiki_link'],
+                    'ruxpert_link': weapon['ruxpert_link'],
+                    'weaponland_link': weapon['weaponland_link']
+                }
+                submitted = True
+                break
 
+        if not weapon_info:
+            flash('Оружие не найдено.', 'danger')
+            submitted = True
+
+        return render_template('index.html', form=form, weapon_info=weapon_info, submitted=submitted)
+
+    return render_template('index.html', form=form, weapon_info=None, submitted=False)
 
 if __name__ == '__main__':
     app.run()
